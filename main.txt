@@ -85,6 +85,10 @@ cmdsList.Text = [[
 🔹 `:clip` → Para de atravessar paredes.
 🔹 `:spin NÚMERO` → Gira conforme o valor.
 🔹 `:unspin` → Para de girar.
+🔹 `:levitacao` → Começa a levitar.
+🔹 `:unlevitacao` → Para a levitação.
+🔹 `:xray` → Veja através de tudo.
+🔹 `:unxray` → Desativa o Xray.
 🔹 `:cmds` → Abre este menu de comandos.
 ]]
 
@@ -107,8 +111,11 @@ local camera = workspace.CurrentCamera
 local originalCameraSubject = camera.CameraSubject
 local loopGoto = false
 local noclipEnabled = false
+local levitating = false
 local spinning = false
+local xrayEnabled = false
 
+-- Função para procurar jogador pelo nome
 local function findPlayerByPartialName(partialName)
     partialName = partialName:lower()
     for _, plr in ipairs(game.Players:GetPlayers()) do
@@ -153,19 +160,51 @@ local function executeCommand(command)
     elseif args[1] == ":clip" then
         noclipEnabled = false
     elseif args[1] == ":spin" and args[2] then
-        local spinSpeed = tonumber(args[2])  -- Converte o argumento para número
+        local spinSpeed = tonumber(args[2])
         if spinSpeed then
             spinning = true
             while spinning do
                 if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                     local humanoidRootPart = player.Character.HumanoidRootPart
-                    humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)  -- Gira em torno do eixo Y
+                    humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
                 end
-                task.wait(0.05)  -- Controla a velocidade da rotação
+                task.wait(0.05)
             end
         end
     elseif args[1] == ":unspin" then
         spinning = false
+    elseif args[1] == ":levitacao" then
+        levitating = true
+        while levitating do
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local humanoidRootPart = player.Character.HumanoidRootPart
+                humanoidRootPart.Anchored = true
+                humanoidRootPart.Position = humanoidRootPart.Position + Vector3.new(0, 0.5, 0) -- Eleva um pouco
+            end
+            task.wait(0.1)
+        end
+    elseif args[1] == ":unlevitacao" then
+        levitating = false
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoidRootPart = player.Character.HumanoidRootPart
+            humanoidRootPart.Anchored = false
+        end
+    elseif args[1] == ":xray" then
+        xrayEnabled = true
+        for _, part in ipairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Material = Enum.Material.SmoothPlastic
+                part.Transparency = 0.5
+            end
+        end
+    elseif args[1] == ":unxray" then
+        xrayEnabled = false
+        for _, part in ipairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Material = Enum.Material.SmoothPlastic
+                part.Transparency = 0
+            end
+        end
     end
 end
 
@@ -175,7 +214,7 @@ end)
 
 -- Comandos via chat
 game.Players.LocalPlayer.Chatted:Connect(function(message)
-    if message:sub(1, 1) == ":" then  -- Verifica se é um comando
+    if message:sub(1, 1) == ":" then
         executeCommand(message)
     end
 end)
