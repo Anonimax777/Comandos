@@ -1,0 +1,181 @@
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Criando o GUI principal
+local frame = Instance.new("Frame")
+frame.Parent = gui
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Size = UDim2.new(0, 220, 0, 300)
+frame.Position = UDim2.new(0, 10, 0, 50)
+frame.Draggable = true
+frame.Active = true
+
+-- Título "Angel Commands"
+local title = Instance.new("TextLabel")
+title.Parent = frame
+title.Text = "🌟 Angel Commands 🌟"
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(60, 60, 120)
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+
+-- Caixa de texto para comandos
+local textbox = Instance.new("TextBox")
+textbox.Parent = frame
+textbox.Size = UDim2.new(1, -10, 0, 30)
+textbox.Position = UDim2.new(0, 5, 0, 50)
+textbox.PlaceholderText = "Digite um comando..."
+textbox.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+textbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- Botão de executar comandos
+local button = Instance.new("TextButton")
+button.Parent = frame
+button.Size = UDim2.new(1, -10, 0, 30)
+button.Position = UDim2.new(0, 5, 0, 85)
+button.Text = "Executar"
+button.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- Criando o segundo GUI (Lista de comandos)
+local cmdsGui = Instance.new("ScreenGui")
+cmdsGui.Parent = player:WaitForChild("PlayerGui")
+cmdsGui.Enabled = false -- Começa oculto
+
+local cmdsFrame = Instance.new("Frame")
+cmdsFrame.Parent = cmdsGui
+cmdsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+cmdsFrame.Size = UDim2.new(0, 300, 0, 400)
+cmdsFrame.Position = UDim2.new(0.5, -150, 0.3, 0)
+cmdsFrame.Draggable = true
+cmdsFrame.Active = true
+
+local cmdsTitle = Instance.new("TextLabel")
+cmdsTitle.Parent = cmdsFrame
+cmdsTitle.Text = "📜 Lista de Comandos"
+cmdsTitle.Size = UDim2.new(1, 0, 0, 40)
+cmdsTitle.BackgroundColor3 = Color3.fromRGB(100, 50, 200)
+cmdsTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+cmdsTitle.Font = Enum.Font.GothamBold
+cmdsTitle.TextSize = 18
+
+-- Criando a lista de comandos
+local cmdsList = Instance.new("TextLabel")
+cmdsList.Parent = cmdsFrame
+cmdsList.Size = UDim2.new(1, -10, 1, -50)
+cmdsList.Position = UDim2.new(0, 5, 0, 45)
+cmdsList.TextColor3 = Color3.fromRGB(255, 255, 255)
+cmdsList.TextXAlignment = Enum.TextXAlignment.Left
+cmdsList.TextYAlignment = Enum.TextYAlignment.Top
+cmdsList.TextSize = 14
+cmdsList.Font = Enum.Font.Gotham
+cmdsList.BackgroundTransparency = 1
+cmdsList.Text = [[
+📌 **Lista de Comandos:**
+🔹 `:tp NOME` → Teleporta até o jogador.
+🔹 `:speed NÚMERO` → Ajusta sua velocidade.
+🔹 `:jump NÚMERO` → Ajusta a força do pulo.
+🔹 `:view NOME` → Entra na visão do jogador.
+🔹 `:unview` → Sai da visão do jogador.
+🔹 `:loopgoto NOME` → Gruda no jogador.
+🔹 `:unloopgoto` → Para de grudar.
+🔹 `:noclip` → Atravessa paredes.
+🔹 `:clip` → Para de atravessar paredes.
+🔹 `:spin NÚMERO` → Gira conforme o valor.
+🔹 `:unspin` → Para de girar.
+🔹 `:cmds` → Abre este menu de comandos.
+]]
+
+-- Botão de fechar o GUI de comandos
+local closeButton = Instance.new("TextButton")
+closeButton.Parent = cmdsFrame
+closeButton.Size = UDim2.new(0, 40, 0, 40)
+closeButton.Position = UDim2.new(1, -45, 0, 5)
+closeButton.Text = "❌"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 18
+closeButton.MouseButton1Click:Connect(function()
+    cmdsGui.Enabled = false
+end)
+
+-- Variáveis e funções
+local camera = workspace.CurrentCamera
+local originalCameraSubject = camera.CameraSubject
+local loopGoto = false
+local noclipEnabled = false
+local spinning = false
+
+local function findPlayerByPartialName(partialName)
+    partialName = partialName:lower()
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr.Name:lower():sub(1, #partialName) == partialName then
+            return plr
+        end
+    end
+    return nil
+end
+
+local function executeCommand(command)
+    local args = command:split(" ")
+
+    if args[1] == ":cmds" then
+        cmdsGui.Enabled = true
+    elseif args[1] == ":tp" and args[2] then
+        local target = findPlayerByPartialName(args[2])
+        if target then
+            player.Character:MoveTo(target.Character.HumanoidRootPart.Position)
+        end
+    elseif args[1] == ":view" and args[2] then
+        local target = findPlayerByPartialName(args[2])
+        if target and target.Character then
+            camera.CameraSubject = target.Character:FindFirstChild("Humanoid")
+        end
+    elseif args[1] == ":unview" then
+        camera.CameraSubject = originalCameraSubject
+    elseif args[1] == ":loopgoto" and args[2] then
+        local target = findPlayerByPartialName(args[2])
+        if target then
+            loopGoto = true
+            while loopGoto and task.wait(0.1) do
+                if player.Character and target.Character then
+                    player.Character:MoveTo(target.Character.HumanoidRootPart.Position)
+                end
+            end
+        end
+    elseif args[1] == ":unloopgoto" then
+        loopGoto = false
+    elseif args[1] == ":noclip" then
+        noclipEnabled = true
+    elseif args[1] == ":clip" then
+        noclipEnabled = false
+    elseif args[1] == ":spin" and args[2] then
+        local spinSpeed = tonumber(args[2])  -- Converte o argumento para número
+        if spinSpeed then
+            spinning = true
+            while spinning do
+                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local humanoidRootPart = player.Character.HumanoidRootPart
+                    humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)  -- Gira em torno do eixo Y
+                end
+                task.wait(0.05)  -- Controla a velocidade da rotação
+            end
+        end
+    elseif args[1] == ":unspin" then
+        spinning = false
+    end
+end
+
+button.MouseButton1Click:Connect(function()
+    executeCommand(textbox.Text)
+end)
+
+-- Comandos via chat
+game.Players.LocalPlayer.Chatted:Connect(function(message)
+    if message:sub(1, 1) == ":" then  -- Verifica se é um comando
+        executeCommand(message)
+    end
+end)
